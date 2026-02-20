@@ -247,77 +247,45 @@ const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersec
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 </script>
 <script>
-// ── GOOGLE FORMS CONFIG ─────────────────────────────────────────────────────
-// INSTRUCTIONS: 
-// 1. Go to forms.google.com → create new form titled "Titan Insights Demo Request"
-// 2. Add these fields (Short Answer unless noted):
-//    - First Name, Last Name, Work Email, Job Title, Company Name
-//    - Company Size (Dropdown), Industry (Dropdown), Primary Interest (Dropdown)
-//    - Tell Us About Your Needs (Paragraph)
-// 3. Click ⋮ → "Get pre-filled link" → fill dummy values → "Get Link"
-// 4. From that URL copy the entry IDs (entry.XXXXXXXXX) for each field
-// 5. Replace the entry IDs below with your real ones
-// 6. Replace YOUR_FORM_ID with your form's ID from the URL
-
-const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse";
-
-const FIELD_MAP = {
-  firstname:   "entry.000000001",  // ← Replace with real entry ID
-  lastname:    "entry.000000002",  // ← Replace with real entry ID
-  email:       "entry.000000003",  // ← Replace with real entry ID
-  jobtitle:    "entry.000000004",  // ← Replace with real entry ID
-  company:     "entry.000000005",  // ← Replace with real entry ID
-  companysize: "entry.000000006",  // ← Replace with real entry ID
-  industry:    "entry.000000007",  // ← Replace with real entry ID
-  interest:    "entry.000000008",  // ← Replace with real entry ID
-  message:     "entry.000000009",  // ← Replace with real entry ID
-};
-
-// ── STEP NAVIGATION ─────────────────────────────────────────────────────────
 function goStep(n) {
-  // Validate before moving forward
   if (n === 2) {
-    const fields = ['f_firstname','f_lastname','f_email','f_jobtitle'];
-    for (let id of fields) {
-      const el = document.getElementById(id);
-      if (!el.value.trim()) { el.style.borderColor='#e53e3e'; el.focus(); return; }
-      el.style.borderColor='';
+    var fields = ['f_firstname','f_lastname','f_email','f_jobtitle'];
+    for (var i = 0; i < fields.length; i++) {
+      var el = document.getElementById(fields[i]);
+      if (!el.value.trim()) { el.style.borderColor = '#e53e3e'; el.focus(); return; }
+      el.style.borderColor = '';
     }
   }
   if (n === 3) {
-    const fields = ['f_company','f_companysize','f_industry','f_interest'];
-    for (let id of fields) {
-      const el = document.getElementById(id);
-      if (!el.value.trim()) { el.style.borderColor='#e53e3e'; el.focus(); return; }
-      el.style.borderColor='';
+    var fields2 = ['f_company','f_companysize','f_industry','f_interest'];
+    for (var j = 0; j < fields2.length; j++) {
+      var el2 = document.getElementById(fields2[j]);
+      if (!el2.value.trim()) { el2.style.borderColor = '#e53e3e'; el2.focus(); return; }
+      el2.style.borderColor = '';
     }
   }
-
-  // Hide all pages
-  document.querySelectorAll('.form-page').forEach(p => p.style.display = 'none');
+  var pages = document.querySelectorAll('.form-page');
+  for (var p = 0; p < pages.length; p++) pages[p].style.display = 'none';
   document.getElementById('page' + n).style.display = 'block';
 
-  // Update step indicators
-  document.querySelectorAll('.form-step').forEach((s, i) => {
-    s.classList.remove('active','done');
-    if (i + 1 < n) s.classList.add('done');
-    if (i + 1 === n) s.classList.add('active');
-  });
-
-  // Update dividers
-  document.querySelectorAll('.form-step-divider').forEach((d, i) => {
-    d.style.background = i < n - 1 ? 'var(--gold-dark)' : 'var(--border)';
-  });
+  var steps = document.querySelectorAll('.form-step');
+  for (var s = 0; s < steps.length; s++) {
+    steps[s].classList.remove('active','done');
+    if (s + 1 < n) steps[s].classList.add('done');
+    if (s + 1 === n) steps[s].classList.add('active');
+  }
+  var dividers = document.querySelectorAll('.form-step-divider');
+  for (var d = 0; d < dividers.length; d++) {
+    dividers[d].style.background = d < n - 1 ? 'var(--gold-dark)' : 'var(--border)';
+  }
 }
 
-// ── FORM SUBMISSION ─────────────────────────────────────────────────────────
 function submitForm() {
-  const btn = document.getElementById('submitBtn');
+  var btn = document.getElementById('submitBtn');
   btn.textContent = 'Submitting...';
   btn.disabled = true;
 
-  // Collect values
-  const data = {
+  var data = {
     firstname:   document.getElementById('f_firstname').value,
     lastname:    document.getElementById('f_lastname').value,
     email:       document.getElementById('f_email').value,
@@ -326,59 +294,76 @@ function submitForm() {
     companysize: document.getElementById('f_companysize').value,
     industry:    document.getElementById('f_industry').value,
     interest:    document.getElementById('f_interest').value,
-    message:     document.getElementById('f_message').value,
+    message:     document.getElementById('f_message').value
   };
 
-  // Build Google Forms URL with all field values
-  const params = new URLSearchParams();
-  for (const [key, entryId] of Object.entries(FIELD_MAP)) {
-    params.append(entryId, data[key] || '');
-  }
-
-  // Submit silently via hidden iframe (no redirect, no CORS issue)
-  const iframe = document.createElement('iframe');
-  iframe.name = 'hidden_iframe';
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = GOOGLE_FORM_ACTION;
-  form.target = 'hidden_iframe';
-
-  for (const [key, entryId] of Object.entries(FIELD_MAP)) {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = entryId;
-    input.value = data[key] || '';
-    form.appendChild(input);
-  }
-
-  document.body.appendChild(form);
-  form.submit();
-
-  // Show success after short delay
-  setTimeout(() => {
-    document.querySelectorAll('.form-page').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.form-steps').forEach(s => s.style.display = 'none');
-    const success = document.getElementById('formSuccess');
-    success.style.display = 'block';
-    success.style.fontSize = '1rem';
-    success.style.padding = '28px';
-    success.style.textAlign = 'center';
-    success.style.background = 'rgba(100,200,150,.1)';
-    success.style.border = '1px solid rgba(100,200,150,.3)';
-    success.style.borderRadius = '10px';
-    success.style.color = 'var(--navy)';
-    success.style.lineHeight = '1.8';
-    success.innerHTML = `
-      <div style="font-size:2rem;margin-bottom:12px;">✅</div>
-      <strong style="font-size:1.1rem;color:var(--navy);">Request Submitted Successfully!</strong><br>
-      <span style="color:var(--txt3);">Thank you, <strong>${data.firstname}</strong>. Our team will reach out to <strong>${data.email}</strong> within 1 business day.</span>
-    `;
-    // Clean up
-    document.body.removeChild(form);
-  }, 1200);
+  // Submit to Formspree
+  fetch('https://formspree.io/f/mpqjjrga', {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      'First Name':      data.firstname,
+      'Last Name':       data.lastname,
+      'Work Email':      data.email,
+      'Job Title':       data.jobtitle,
+      'Company':         data.company,
+      'Company Size':    data.companysize,
+      'Industry':        data.industry,
+      'Primary Interest':data.interest,
+      'Message':         data.message,
+      '_replyto':        data.email,
+      '_subject':        'New Demo Request: ' + data.firstname + ' ' + data.lastname + ' from ' + data.company
+    })
+  })
+  .then(function(response) {
+    if (response.ok) {
+      showSuccess(data.firstname, data.email);
+    } else {
+      btn.textContent = 'Submit Demo Request';
+      btn.disabled = false;
+      alert('Something went wrong. Please try again.');
+    }
+  })
+  .catch(function() {
+    btn.textContent = 'Submit Demo Request';
+    btn.disabled = false;
+    alert('Connection error. Please try again.');
+  });
 }
+
+function showSuccess(firstname, email) {
+  var pages = document.querySelectorAll('.form-page');
+  for (var p = 0; p < pages.length; p++) pages[p].style.display = 'none';
+  var stepBars = document.querySelectorAll('.form-steps');
+  for (var s = 0; s < stepBars.length; s++) stepBars[s].style.display = 'none';
+
+  var success = document.getElementById('formSuccess');
+  success.style.display = 'block';
+  success.style.fontSize = '1rem';
+  success.style.padding = '32px 28px';
+  success.style.textAlign = 'center';
+  success.style.background = 'rgba(100,200,150,.1)';
+  success.style.border = '1px solid rgba(100,200,150,.3)';
+  success.style.borderRadius = '10px';
+  success.style.color = 'var(--navy)';
+  success.style.lineHeight = '1.8';
+  success.innerHTML = '<div style="font-size:2.5rem;margin-bottom:14px;">&#x2705;</div>'
+    + '<strong style="font-size:1.15rem;color:var(--navy);display:block;margin-bottom:8px;">Request Submitted Successfully!</strong>'
+    + '<span style="color:var(--txt3);">Thank you, <strong>' + firstname + '</strong>. '
+    + 'Our team will reach out to <strong>' + email + '</strong> within 1 business day.</span>';
+}
+
+// Nav scroll
+window.addEventListener('scroll', function() {
+  var nav = document.querySelector('nav');
+  if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// Scroll reveal
+var reveals = document.querySelectorAll('.reveal');
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+reveals.forEach(function(r) { observer.observe(r); });
 </script>
 </body></html>
